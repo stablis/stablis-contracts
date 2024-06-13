@@ -1,0 +1,11 @@
+node_modules
+.idea/
+
+# Buidler contract JSONs
+/artifacts
+
+# Buidler compilation cache
+/cache
+
+# macOS Finder attribute files
+.DS_Store

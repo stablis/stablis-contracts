@@ -1,0 +1,13 @@
+{
+  "name": "@stablis/contracts",
+  "version": "1.0.0",
+  "description": "Stablis is a decentralized borrowing protocol",
+  "scripts": {
+    "compile": "hardhat compile"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "^4.8.2",
+    "@openzeppelin/contracts-upgradeable": "4.8.2",
+    "hardhat": "2.13.0"
+  }
+}
