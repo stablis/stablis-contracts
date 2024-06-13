@@ -15,8 +15,8 @@ contract HintHelpers is StablisBase, CheckContract {
 
     struct LocalRedemptionVars {
         address _asset;
-        uint256 _VSTamount;
-        uint256 _pricel;
+        uint256 _USDSamount;
+        uint256 _price;
         uint256 _maxIterations;
     }
 
@@ -26,8 +26,8 @@ contract HintHelpers is StablisBase, CheckContract {
         address sortedChests;
     }
 
-    ISortedChests public sortedChests;
-    IChestManager public chestManager;
+    ISortedChests immutable public sortedChests;
+    IChestManager immutable public chestManager;
 
     // --- Dependency setters ---
 
@@ -76,12 +76,12 @@ contract HintHelpers is StablisBase, CheckContract {
         )
     {
         ISortedChests sortedChestsCached = sortedChests;
-        LocalRedemptionVars memory vars = LocalRedemptionVars(
-            _asset,
-            _USDSamount,
-            _price,
-            _maxIterations
-        );
+        LocalRedemptionVars memory vars = LocalRedemptionVars({
+            _asset: _asset,
+            _USDSamount: _USDSamount,
+            _price: _price,
+            _maxIterations: _maxIterations
+        });
 
         uint256 remainingUSDS = _USDSamount;
         address currentChestuser = sortedChestsCached.getLast(vars._asset);

@@ -4,9 +4,10 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import "./Interfaces/ICollSurplusPool.sol";
-import "./Dependencies/IERC20.sol";
 import "./Dependencies/StablisMath.sol";
 import "./Dependencies/CheckContract.sol";
 
@@ -44,7 +45,7 @@ contract CollSurplusPool is OwnableUpgradeable, CheckContract, ICollSurplusPool 
         borrowerOperationsAddress = _dependencies.borrowerOperations;
         chestManagerAddress = _dependencies.chestManager;
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     /* Returns the ETH state variable at ActivePool address.
@@ -83,8 +84,7 @@ contract CollSurplusPool is OwnableUpgradeable, CheckContract, ICollSurplusPool 
             (bool success, ) = _account.call{ value: claimableColl }("");
             require(success, "CollSurplusPool: sending ETH failed");
         } else {
-            bool success = IERC20(_asset).transfer(_account, StablisMath.decimalsCorrection(_asset, claimableColl));
-            require(success, "CollSurplusPool: Sending ERC20 token to _account failed");
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_asset), _account, StablisMath.decimalsCorrection(_asset, claimableColl));
         }
     }
 

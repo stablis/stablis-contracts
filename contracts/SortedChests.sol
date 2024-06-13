@@ -86,7 +86,7 @@ contract SortedChests is OwnableUpgradeable, CheckContract, ISortedChests {
         borrowerOperationsAddress = _dependencies.borrowerOperations;
         chestManager = IChestManager(_dependencies.chestManager);
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     /*

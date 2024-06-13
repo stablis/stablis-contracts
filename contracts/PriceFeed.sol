@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/IOracle.sol";
 import "./Interfaces/IDIA.sol";
 import "./Interfaces/AggregatorV3Interface.sol";
 import "./Interfaces/IAttributes.sol";
@@ -51,10 +50,10 @@ contract PriceFeed is OwnableUpgradeable, CheckContract, BaseMath, IPriceFeed {
 
         attributes = IAttributes(_dependencies.attributes);
 
-        timeout = 14400;  // 4 hours: 60 * 60 * 4
+        timeout = 14_400;  // 4 hours: 60 * 60 * 4
         maxPriceDeviationFromPreviousRound = 5e17; // 50%
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     // --- Functions ---

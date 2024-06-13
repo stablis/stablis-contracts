@@ -7,6 +7,9 @@ import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+
 import "../Dependencies/BaseMath.sol";
 import "../Dependencies/StablisMath.sol";
 import "../Dependencies/CheckContract.sol";
@@ -79,7 +82,7 @@ contract StablisStaking is IStablisStaking, OwnableUpgradeable, ReentrancyGuardU
 
         nftBoostEnd = block.timestamp + 183 days;
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     // If caller has a pre-existing stake, send any accumulated ETH and USDS gains to them.
@@ -170,10 +173,11 @@ contract StablisStaking is IStablisStaking, OwnableUpgradeable, ReentrancyGuardU
             totalBoostedStablisStaked = totalBoostedStablisStaked
                 .add(newStake)
                 .sub(isBoosted ? prevStake : 0);
-            boostedStakers[msg.sender] = true;
-
+            if (!isBoosted) {
+                boostedStakers[msg.sender] = true;
+                emit StakeBoosted(msg.sender);
+            }
             emit TotalBoostedStablisStakedUpdated(totalBoostedStablisStaked);
-            emit StakeBoosted(msg.sender);
         } else if (isBoosted) {
             totalBoostedStablisStaked = totalBoostedStablisStaked.sub(prevStake);
             boostedStakers[msg.sender] = false;
@@ -249,8 +253,7 @@ contract StablisStaking is IStablisStaking, OwnableUpgradeable, ReentrancyGuardU
             (bool success,) = msg.sender.call{value: gain}("");
             require(success, "StablisStaking: Failed to send accumulated AssetGain");
         } else {
-            bool success = IERC20(_asset).transfer(msg.sender, gain);
-            require(success, "StablisStaking: ERC20 transfer failed");
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_asset), msg.sender, gain);
         }
     }
 

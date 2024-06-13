@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract StablisNFT is ERC721Enumerable {
 
     address immutable public minter;
-    uint256 constant public maxSupply = 2500;
+    uint256 constant public maxSupply = 2_500;
 
     uint256 private tokenIdCounter;
 

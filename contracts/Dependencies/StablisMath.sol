@@ -3,12 +3,13 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
-import "./IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 library StablisMath {
     using SafeMathUpgradeable for uint256;
 
     uint256 internal constant DECIMAL_PRECISION = 1e18;
+    uint256 internal constant MINUTES_IN_THOUSAND_YEARS = 525_600_000;
 
     /* Precision for Nominal ICR (independent of price). Rationale for the value:
      *
@@ -61,7 +62,7 @@ library StablisMath {
     */
     function _decPow(uint256 _base, uint256 _minutes) internal pure returns (uint256) {
 
-        if (_minutes > 525600000) {_minutes = 525600000;}  // cap to avoid overflow
+        if (_minutes > MINUTES_IN_THOUSAND_YEARS) {_minutes = MINUTES_IN_THOUSAND_YEARS;}  // cap to avoid overflow
 
         if (_minutes == 0) {return DECIMAL_PRECISION;}
 
@@ -94,7 +95,7 @@ library StablisMath {
         }
         // Return the maximal value for uint256 if the Chest has a debt of 0. Represents "infinite" CR.
         else { // if (_debt == 0)
-            return 2**256 - 1;
+            return type(uint256).max;
         }
     }
 
@@ -106,7 +107,7 @@ library StablisMath {
         }
         // Return the maximal value for uint256 if the Chest has a debt of 0. Represents "infinite" CR.
         else { // if (_debt == 0)
-            return 2**256 - 1;
+            return type(uint256).max;
         }
     }
 
@@ -115,7 +116,7 @@ library StablisMath {
         if (_token == address(0)) return _amount;
         if (_amount == 0) return 0;
 
-        uint8 decimals = IERC20(_token).decimals();
+        uint8 decimals = IERC20MetadataUpgradeable(_token).decimals();
 
         if (decimals < 18) {
             return _amount.div(10**(18 - decimals));

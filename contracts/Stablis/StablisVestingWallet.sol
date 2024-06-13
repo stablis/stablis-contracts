@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/finance/VestingWallet.sol";
 contract StablisVestingWallet is VestingWallet {
 
     uint256 private constant SIX_MONTHS = 60 * 60 * 24 * 30 * 6;
-    uint256 private constant MAX_BPS = 10_000;
+    uint256 private constant MAX_BPS = 100_00;
 
     uint256 private immutable unlockedAmountBPS;
 
@@ -32,15 +32,23 @@ contract StablisVestingWallet is VestingWallet {
     }
 
     function _vestingSchedule(uint256 totalAllocation, uint64 timestamp) internal view override returns (uint256) {
-        uint256 unlocked = totalAllocation * unlockedAmountBPS / MAX_BPS;
-        uint256 locked = totalAllocation - unlocked;
+        uint256 unlocked;
+        uint256 locked;
+        unchecked {
+            unlocked = totalAllocation * unlockedAmountBPS / MAX_BPS;
+            locked = totalAllocation - unlocked;
+        }
 
         if (timestamp < start()) {
             return unlocked;
         } else if (timestamp >= start() + duration()) {
             return totalAllocation;
         } else {
-            return unlocked + (locked * (timestamp - start())) / duration();
+            uint256 vested;
+            unchecked {
+                vested = unlocked + (locked * (timestamp - start())) / duration();
+            }
+            return vested;
         }
     }
 }

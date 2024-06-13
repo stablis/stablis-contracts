@@ -4,6 +4,8 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/IChestManager.sol";
@@ -421,12 +423,7 @@ contract BorrowerOperations is StablisBase, OwnableUpgradeable, CheckContract, I
             (bool success, ) = address(_activePool).call{value: _amount}("");
             require(success, "BorrowerOps: Sending ETH to ActivePool failed");
         } else {
-            bool success = IERC20(_asset).transferFrom(
-                msg.sender,
-                address(_activePool),
-                StablisMath.decimalsCorrection(_asset, _amount)
-            );
-            require(success, "BorrowerOps: Sending ERC20 token to ActivePool failed");
+            SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(_asset), msg.sender, address(_activePool), StablisMath.decimalsCorrection(_asset, _amount));
             _activePool.receivedERC20(_asset, _amount);
         }
     }
@@ -509,7 +506,7 @@ contract BorrowerOperations is StablisBase, OwnableUpgradeable, CheckContract, I
     function _requireValidAmount(address _asset, uint256 _amount) internal view {
         if (_asset == address(0)) { return; }
         if (_amount == 0) { return; }
-        uint8 decimals = IERC20(_asset).decimals();
+        uint8 decimals = IERC20MetadataUpgradeable(_asset).decimals();
         require(decimals <= 18, "Token has more than 18 decimals");
 
         if (decimals < 18) {
@@ -618,17 +615,17 @@ contract BorrowerOperations is StablisBase, OwnableUpgradeable, CheckContract, I
         address _asset,
         uint256 _amount,
         bool canBeZero
-    ) private view returns (uint256) {
+    ) internal view returns (uint256) {
         bool isEth = _asset == address(0);
 
-        require(
-            (canBeZero || (isEth && msg.value != 0)) || (!isEth && msg.value == 0),
-            "BorrowerOp: Invalid Input. Override msg.value only if using ETH asset, otherwise use _tokenAmount"
-        );
-
-        if (_asset == address(0)) {
+        if (isEth) {
             _amount = msg.value;
         }
+
+        require(
+            canBeZero || _amount > 0,
+            "BorrowerOp: Invalid Input. Override msg.value only if using ETH asset, otherwise use _amount"
+        );
 
         return _amount;
     }

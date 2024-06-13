@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {AggregatorV3Interface} from "./Interfaces/AggregatorV3Interface.sol";
-import "./Dependencies/IERC20.sol";
+import "./Dependencies/CheckContract.sol";
 
-contract AggregatorV3Wrapper is AggregatorV3Interface {
+contract AggregatorV3Wrapper is CheckContract, AggregatorV3Interface {
 
-    IERC20 public immutable vaultToken;
+    IERC20Upgradeable public immutable vaultToken;
     AggregatorV3Interface public immutable assetAggregatorV3;
     address public immutable totalAssetsAddress;
-    string public totalAssetsMethodSignature;
+    bytes4 public immutable TOTAL_ASSETS_SELECTOR;
 
     constructor(
         address _vaultToken,
@@ -17,10 +18,14 @@ contract AggregatorV3Wrapper is AggregatorV3Interface {
         address _totalAssetsAddress,
         string memory _totalAssetsMethodSignature
     ) {
-        vaultToken = IERC20(_vaultToken);
+        checkContract(_vaultToken);
+        checkContract(_assetAggregatorV3);
+        checkContract(_totalAssetsAddress);
+
+        vaultToken = IERC20Upgradeable(_vaultToken);
         assetAggregatorV3 = AggregatorV3Interface(_assetAggregatorV3);
         totalAssetsAddress = _totalAssetsAddress;
-        totalAssetsMethodSignature = _totalAssetsMethodSignature;
+        TOTAL_ASSETS_SELECTOR = bytes4(keccak256(bytes(_totalAssetsMethodSignature)));
     }
 
     function decimals() external view returns (uint8) {
@@ -52,7 +57,7 @@ contract AggregatorV3Wrapper is AggregatorV3Interface {
     }
 
     function _getVaultTokenData() internal view returns (uint256 totalDeposits, uint256 totalSupply) {
-        (bool success, bytes memory data) = totalAssetsAddress.staticcall(abi.encodeWithSignature(totalAssetsMethodSignature));
+        (bool success, bytes memory data) = totalAssetsAddress.staticcall(abi.encodeWithSelector(TOTAL_ASSETS_SELECTOR));
         require(success, "Failed to get total deposits");
         totalDeposits = abi.decode(data, (uint256));
         totalSupply = vaultToken.totalSupply();

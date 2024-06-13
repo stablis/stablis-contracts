@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 import "./Interfaces/IChestManager.sol";
 import "./Interfaces/IStabilityPool.sol";
@@ -15,7 +16,6 @@ import "./Interfaces/IStablisStaking.sol";
 import "./Interfaces/IUSDSAirdrop.sol";
 
 import "./Dependencies/StablisBase.sol";
-import "./Dependencies/IERC20.sol";
 import "./Dependencies/CheckContract.sol";
 
 contract ChestManager is StablisBase, OwnableUpgradeable, CheckContract, IChestManager {
@@ -51,7 +51,7 @@ contract ChestManager is StablisBase, OwnableUpgradeable, CheckContract, IChestM
      * Half-life of 12h. 12h = 720 min
      * (1/2) = d^720 => d = (1/2)^(1/720)
      */
-    uint256 constant public MINUTE_DECAY_FACTOR = 999037758833783000;
+    uint256 constant public MINUTE_DECAY_FACTOR = 0.999037758833783e18;
     uint256 constant public REDEMPTION_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
     uint256 constant public MAX_BORROWING_FEE = DECIMAL_PRECISION / 100 * 5; // 5%
 
@@ -250,7 +250,7 @@ contract ChestManager is StablisBase, OwnableUpgradeable, CheckContract, IChestM
         usdsAirdrop = IUSDSAirdrop(_dependencies.usdsAirdrop);
         usdsToken = IUSDSToken(_dependencies.usdsToken);
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     // --- Getters ---
@@ -496,7 +496,12 @@ contract ChestManager is StablisBase, OwnableUpgradeable, CheckContract, IChestM
     )
         internal returns (SingleRedemptionValues memory singleRedemption)
     {
-        LocalVariables_AssetBorrowerPrice memory vars = LocalVariables_AssetBorrowerPrice(_asset, _borrower, _price);
+        LocalVariables_AssetBorrowerPrice memory vars = LocalVariables_AssetBorrowerPrice({
+            _asset: _asset,
+            _borrower: _borrower,
+            _price: _price
+        });
+
         uint256 USDS_GAS_COMPENSATION = getUSDSGasCompensation();
 
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the Chest minus the liquidation reserve
@@ -1095,7 +1100,7 @@ contract ChestManager is StablisBase, OwnableUpgradeable, CheckContract, IChestM
     function _calcRedemptionFee(address _asset, uint256 _redemptionRate, uint256 _ETHDrawn) internal view returns (uint256) {
         uint256 redemptionFee = _redemptionRate.mul(_ETHDrawn).div(DECIMAL_PRECISION);
         if (_asset != address(0)) {
-            uint8 nativeDecimals = IERC20(_asset).decimals();
+            uint8 nativeDecimals = IERC20MetadataUpgradeable(_asset).decimals();
             if (nativeDecimals < 18) {
                 redemptionFee = StablisMath.decimalsCorrectionWithPadding(redemptionFee, nativeDecimals);
             }

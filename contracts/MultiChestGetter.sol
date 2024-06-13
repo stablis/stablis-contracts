@@ -6,8 +6,10 @@ pragma experimental ABIEncoderV2;
 import "./ChestManager.sol";
 import "./SortedChests.sol";
 
+import "./Dependencies/CheckContract.sol";
+
 /*  Helper contract for grabbing Chest data for the front end. Not part of the core Stablis system. */
-contract MultiChestGetter {
+contract MultiChestGetter is CheckContract {
     struct CombinedChestData {
         address owner;
 
@@ -28,6 +30,9 @@ contract MultiChestGetter {
     ISortedChests public sortedChests;
 
     constructor(Dependencies memory _dependencies) {
+        checkContract(_dependencies.chestManager);
+        checkContract(_dependencies.sortedChests);
+
         chestManager = ChestManager(_dependencies.chestManager);
         sortedChests = ISortedChests(_dependencies.sortedChests);
     }
