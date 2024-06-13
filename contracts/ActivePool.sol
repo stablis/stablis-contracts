@@ -5,11 +5,12 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 import "./Interfaces/IActivePool.sol";
 import "./Interfaces/IDeposit.sol";
 import "./Dependencies/CheckContract.sol";
-import "./Dependencies/IERC20.sol";
 import "./Dependencies/StablisMath.sol";
 
 /*
@@ -58,7 +59,7 @@ contract ActivePool is OwnableUpgradeable, ReentrancyGuardUpgradeable, CheckCont
         defaultPoolAddress = _dependencies.defaultPool;
         stabilityPoolAddress = _dependencies.stabilityPool;
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     // --- Getters for public variables. Required by IPool interface ---
@@ -88,8 +89,7 @@ contract ActivePool is OwnableUpgradeable, ReentrancyGuardUpgradeable, CheckCont
         ETH[_asset] = ETH[_asset].sub(_amount);
 
         if (_asset != ETH_REF_ADDRESS) {
-            bool success = IERC20(_asset).transfer(_account, StablisMath.decimalsCorrection(_asset, _amount));
-            require(success, "ActivePool: ERC20 transfer failed");
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_asset), _account, StablisMath.decimalsCorrection(_asset, _amount));
 
             if (isERC20DepositContract(_account)) {
                 IDeposit(_account).receivedERC20(_asset, _amount);

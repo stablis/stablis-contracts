@@ -5,6 +5,9 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/IStabilityPool.sol';
 import './Interfaces/IBorrowerOperations.sol';
@@ -16,7 +19,6 @@ import "./Interfaces/IAttributes.sol";
 import "./Dependencies/StablisBase.sol";
 import "./Dependencies/StablisMath.sol";
 import "./Dependencies/StablisSafeMath128.sol";
-import "./Dependencies/IERC20.sol";
 import "./Dependencies/CheckContract.sol";
 
 /*
@@ -250,7 +252,7 @@ contract StabilityPool is StablisBase, OwnableUpgradeable, ReentrancyGuardUpgrad
         sortedChests = ISortedChests(_dependencies.sortedChests);
         usdsToken = IUSDSToken(_dependencies.usdsToken);
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     // --- Getters for public variables. Required by IPool interface ---
@@ -722,8 +724,7 @@ contract StabilityPool is StablisBase, OwnableUpgradeable, ReentrancyGuardUpgrad
             (bool success, ) = msg.sender.call{ value: _amount }("");
             require(success, "StabilityPool: sending ETH failed");
         } else {
-            bool success = IERC20(_asset).transfer(msg.sender, StablisMath.decimalsCorrection(_asset, _amount));
-            require(success, "StabilityPool: ERC20 transfer failed");
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(_asset), msg.sender, StablisMath.decimalsCorrection(_asset, _amount));
         }
     }
 

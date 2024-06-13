@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "./Dependencies/BaseMath.sol";
+import "./Dependencies/CheckContract.sol";
 
 import "./Interfaces/IChestManager.sol";
 import "./Interfaces/IUSDSAirdrop.sol";
 
-contract USDSAirdrop is IUSDSAirdrop, BaseMath, Ownable, Initializable {
+contract USDSAirdrop is IUSDSAirdrop, BaseMath, CheckContract, OwnableUpgradeable {
 
-    uint256 public immutable duration = 60 days;
+    uint256 public constant duration = 60 days;
     uint256 public finishAt;
     uint256 public updatedAt;
     uint256 public rewardRate;
@@ -24,7 +24,7 @@ contract USDSAirdrop is IUSDSAirdrop, BaseMath, Ownable, Initializable {
     mapping(address => mapping(address => uint256)) public assetBalanceOf;
     mapping(address => uint256) public balanceOf; // total balance of an account for all assets
 
-    IERC20 public stsToken;
+    IERC20Upgradeable public stsToken;
     address public chestManager;
 
     modifier onlyAuthorized() {
@@ -35,15 +35,20 @@ contract USDSAirdrop is IUSDSAirdrop, BaseMath, Ownable, Initializable {
     function initialize(
         Dependencies calldata _dependencies,
         address _multiSig
-    ) external initializer onlyOwner {
+    ) external initializer {
+        __Ownable_init();
+
+        checkContract(_dependencies.chestManager);
+        checkContract(_dependencies.stablisToken);
+
         chestManager = _dependencies.chestManager;
-        stsToken = IERC20(_dependencies.stablisToken);
+        stsToken = IERC20Upgradeable(_dependencies.stablisToken);
 
         uint256 rewardAmount = stsToken.balanceOf(address(this));
         require(rewardAmount > 0, "USDSAirdrop: reward amount is 0");
         _initializeRewards(rewardAmount);
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     function lastTimeRewardApplicable() external view override returns (uint) {
@@ -97,7 +102,7 @@ contract USDSAirdrop is IUSDSAirdrop, BaseMath, Ownable, Initializable {
 
         return
             rewardPerTokenStored +
-            (((_lastTimeRewardApplicable() - updatedAt) * 1e18 * rewardRate) /
+            (((_lastTimeRewardApplicable() - updatedAt) * DECIMAL_PRECISION * rewardRate) /
             totalSupply /
                 DECIMAL_PRECISION);
     }
@@ -105,7 +110,7 @@ contract USDSAirdrop is IUSDSAirdrop, BaseMath, Ownable, Initializable {
     function _earned(address _account) internal view returns (uint) {
         return
             ((balanceOf[_account] *
-                (_rewardPerToken() - userRewardPerTokenPaid[_account])) / 1e18) +
+                (_rewardPerToken() - userRewardPerTokenPaid[_account])) / DECIMAL_PRECISION) +
             rewards[_account];
     }
 

@@ -17,7 +17,7 @@ import "../Interfaces/IAttributes.sol";
 contract StablisBase is BaseMath, IStablisBase {
     using SafeMathUpgradeable for uint256;
 
-    uint256 constant public _100pct = 1000000000000000000; // 1e18 == 100%
+    uint256 constant public _100PCT = 1e18;
 
     IActivePool public activePool;
 

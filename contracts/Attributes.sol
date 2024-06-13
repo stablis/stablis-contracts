@@ -52,7 +52,7 @@ contract Attributes is IAttributes, BaseMath, OwnableUpgradeable, CheckContract,
 
     uint256 constant public ONE_YEAR_IN_SECONDS = 365 days;
 
-    uint256 constant public MAX_BPS = 10_000;
+    uint256 constant public MAX_BPS = 100_00;
 
     function initialize(
         Dependencies calldata _dependencies,
@@ -66,6 +66,7 @@ contract Attributes is IAttributes, BaseMath, OwnableUpgradeable, CheckContract,
 
         checkContract(_dependencies.priceFeed);
         checkContract(_dependencies.chestManager);
+        require(_multiSig != address(0), "MultiSig cannot be zero address");
 
         priceFeed = IPriceFeed(_dependencies.priceFeed);
         chestManager = IChestManager(_dependencies.chestManager);
@@ -80,7 +81,7 @@ contract Attributes is IAttributes, BaseMath, OwnableUpgradeable, CheckContract,
         INCENTIVES_LP_BPS = 6666;
         INCENTIVES_SP_BPS = 3334;
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     function getMCR() public view override returns (uint256) {
@@ -88,6 +89,7 @@ contract Attributes is IAttributes, BaseMath, OwnableUpgradeable, CheckContract,
     }
 
     function setMCR(uint256 _mcr) external override onlyOwner {
+        require(_mcr > DECIMAL_PRECISION, "MCR must be greater than 100%");
         MCR = _mcr;
         emit MCRUpdated(_mcr);
     }

@@ -78,7 +78,7 @@ contract CommunityIssuance is ICommunityIssuance, OwnableUpgradeable, BaseMath, 
         uint256 stablisBalance = stablisToken.balanceOf(address(this));
         assert(stablisBalance >= poolsStablisSupplyCap + stakingBoostStablisSupplyCap);
 
-        transferOwnership(_multiSig);
+        _transferOwnership(_multiSig);
     }
 
     function issueStablisSP() external override returns (uint256) {
@@ -145,15 +145,16 @@ contract CommunityIssuance is ICommunityIssuance, OwnableUpgradeable, BaseMath, 
     }
 
     function _getCumulativeIssuance() internal view returns (uint256) {
+        uint256 maxTimePassedInMinutes = 2104000;
         // Get the time passed since deployment
-        int256 timePassedInMinutes = int256(block.timestamp.sub(deploymentTime).div(SECONDS_IN_ONE_MINUTE));
+        int256 timePassedInMinutes = int256(StablisMath._min(block.timestamp.sub(deploymentTime).div(SECONDS_IN_ONE_MINUTE), maxTimePassedInMinutes));
         int256 DP = int256(DECIMAL_PRECISION);
 
-        return StablisMath._min(poolsStablisSupplyCap, uint256(
+        return uint256(
             DP * A_CONSTANT * timePassedInMinutes ** 3 / 1e25
             + DP * B_CONSTANT * timePassedInMinutes ** 2 / 1e14
             + DP * C_CONSTANT * timePassedInMinutes / 1e7
-        ));
+        );
     }
 
     function sendStablis(address _account, uint256 _stablisAmount) external override {

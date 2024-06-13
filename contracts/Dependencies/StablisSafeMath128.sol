@@ -6,16 +6,20 @@ pragma solidity ^0.8.19;
 
 library StablisSafeMath128 {
     function add(uint128 a, uint128 b) internal pure returns (uint128) {
-        uint128 c = a + b;
+        uint128 c;
+        unchecked {
+            c = a + b;
+        }
         require(c >= a, "StablisSafeMath128: addition overflow");
-
         return c;
     }
 
     function sub(uint128 a, uint128 b) internal pure returns (uint128) {
         require(b <= a, "StablisSafeMath128: subtraction overflow");
-        uint128 c = a - b;
-
+        uint128 c;
+        unchecked {
+            c = a - b;
+        }
         return c;
     }
 }

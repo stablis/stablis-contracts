@@ -49,8 +49,7 @@ contract VestingWalletFactory is IVestingWalletFactory, Ownable, Initializable {
             uint64(tgeTimestamp),
             2_000
         );
-        bool success = stsToken.transfer(address(vestingWallet), _amount);
-        require(success, "VestingWalletFactory: STS transfer failed");
+        require(stsToken.transfer(address(vestingWallet), _amount), "VestingWalletFactory: STS transfer failed");
 
         emit VestingWalletDeployedThroughFactory(address(vestingWallet), _beneficiary, uint64(tgeTimestamp), SIX_MONTHS, msg.sender);
     }
