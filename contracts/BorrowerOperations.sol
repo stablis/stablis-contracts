@@ -620,6 +620,8 @@ contract BorrowerOperations is StablisBase, OwnableUpgradeable, CheckContract, I
 
         if (isEth) {
             _amount = msg.value;
+        } else {
+            require(msg.value == 0, "BorrowerOp: msg.value must be 0 for non-ETH assets");
         }
 
         require(
