@@ -32,10 +32,9 @@ contract StablisVestingWallet is VestingWallet {
     }
 
     function _vestingSchedule(uint256 totalAllocation, uint64 timestamp) internal view override returns (uint256) {
-        uint256 unlocked;
+        uint256 unlocked = totalAllocation * unlockedAmountBPS / MAX_BPS;
         uint256 locked;
         unchecked {
-            unlocked = totalAllocation * unlockedAmountBPS / MAX_BPS;
             locked = totalAllocation - unlocked;
         }
 
